@@ -1,5 +1,5 @@
 import bottle
-from bottle import jinja2_view as view, jinja2_template as template
+from jinja2 import Environment, FileSystemLoader
 
 
 class Streamy:
@@ -9,12 +9,9 @@ class Streamy:
         self.app = bottle.Bottle()
         # the folder where the files to serve are located. Do not set
         # directly, use set_folder instead
-        self.folder = "."
+        self.folder = "templates/"
         # the TemplateLookup of Jinja
-        self.templates = TemplateLookup(directories=[self.folder],
-            imports=["from markdown import markdown"],
-            input_encoding='utf-8',
-            )
+        self.templates = Environment(loader=FileSystemLoader('./templates'))
 
         def base_lister():
             files = []
@@ -34,8 +31,7 @@ class Streamy:
         @self.app.route('/', method=['GET'])
         def home():
             t = self.templates.get_template("index.html")
-            data = t.render()
-            return data.encode(t.module._source_encoding)
+            return t.render()
 
     def set_folder(self, folder):
         """
@@ -49,6 +45,8 @@ class Streamy:
         Launch a development web server.
         """
         kwargs.setdefault("host", "0.0.0.0")
-        bottle.run(self.app, server="waitress", **kwargs)
+        bottle.run(self.app, **kwargs)
 
-run(host='localhost', port=8080)
+if __name__ == "__main__":
+    streamy = Streamy()
+    streamy.run(host='localhost', port=8080)
